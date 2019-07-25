@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8">
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Hello World!</title>
+    <script src="http://localhost:8080/Build/Cesium/Cesium.js"></script>
+    <script src="./QuantizedMeshTerrainDataWrapper.js"></script>
+    <script src="./HeightmapTerrainDataWrapper.js"></script>
+    <script src="./GlobeSurfaceTileProviderWrapper.js"></script>
+    <style>
+        @import url(http://localhost:8080/Build/Cesium/Widgets/widgets.css);
+        html,
+        body,
+        .container,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+
+        .tools {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 100px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div id="cesiumContainer">
+    </div>
+    <div class="tools">
+        Opacity: <input id="btnImageryAlpha" type="range" min="0" max="10" value="10" oninput="change()" />
+    </div>
+</div>
+<script>
+    function change() {
+        var value = document.getElementById("btnImageryAlpha").value;
+        if (viewer.imageryLayers) {
+            for (var i = 0; i < viewer.imageryLayers.length; i++) {
+                viewer.imageryLayers.get(i).alpha = value / 10;
+            }
+        }
+        console.log(value);
+    }
+
+    GlobeSurfaceTileProviderWrapper.activate159();
+    QuantizedMeshTerrainDataWrapper.activate();
+    HeightmapTerrainDataWrapper.activate();
+
+
+    var terrainProvider = new Cesium.CesiumTerrainProvider({
+        url: 'https://maps.ynmap.cn/services/stk-terrain/tiles/4326/?key=njsc8ri2OHtkKtt0cnPVyoBx7Mr9QA7a%2Bc%2FF8OGpqG4%3D',
+        requestVertexNormals: true
+    });
+    var webMapTileServiceImageryProvider=new Cesium.WebMapTileServiceImageryProvider({
+        url: "https://{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=b0ad70dc306d789204ddb4ec0b7c2b4d",
+        layer: "tdtImgBasicLayer",
+        style: "default",
+        subdomains:['t0','t1','t2','t3','t4','t5','t6','t7'],
+        format: "image/jpeg",
+        tileMatrixSetID: "GoogleMapsCompatible",
+        maximumLevel: 15,
+        credit:""
+    });
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        //skyAtmosphere: false,
+        //orderIndependentTranslucency: false,
+        baseLayerPicker: false,
+        imageryProvider:webMapTileServiceImageryProvider,
+        //terrainProvider: terrainProvider
+    });
+    //viewer.scene.globe.depthTestAgainstTerrain = false;
+    //change the ugly blue color to black
+    viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0);
+    //default is 1
+    //viewer.scene.globe.imageryLayers.get(0).alpha = 0.5;
+
+    viewer.scene._hdr = false;
+
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = -1000;//设置相机最小缩放距离,距离地表-1000米
+
+    change();
+
+    var blueBox = viewer.entities.add({
+        name: 'Blue box',
+        position: Cesium.Cartesian3.fromDegrees(102.0, 25.0, 5),
+        box: {
+            dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+            material: Cesium.Color.BLUE
+        }
+    });
+
+    viewer.zoomTo(blueBox);
+</script>
+</body>
+
+</html>
